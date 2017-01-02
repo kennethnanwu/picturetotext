@@ -35,7 +35,9 @@ public class PictureToText {
         String inputFileNameWithoutType = imageName.substring(0, imageName.lastIndexOf("."));
         String outputFileName = inputFileNameWithoutType + ".txt";
         File outputFile = Paths.get(outputDir.getAbsolutePath(), outputFileName).toFile();
-        outputFile.deleteOnExit();
+        if (outputFile.exists()) {
+            outputFile.delete();
+        }
         return outputFile;
     }
 
@@ -54,13 +56,14 @@ public class PictureToText {
         int red = (pixel >> 16) & 0xff;
         int green = (pixel >> 8) & 0xff;
         int blue = (pixel) & 0xff;
-
+        logger.debug("point(" + x + " ," + y + ") : (a,r,g,b): " + alpha + ", " + red + ", " + green + ", " + blue);
+        return new Color(red, green, blue, alpha);
     }
 
     public void transfer() {
         File inputImage = Paths.get(imagePath).toFile();
         File outputDir = Paths.get(outputFileDir).toFile();
-        if (!inputImage.exists() ) {
+        if (!inputImage.exists()) {
             logger.fatal("Input file does not exist.");
             System.exit(1);
         }
@@ -73,14 +76,17 @@ public class PictureToText {
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
                     Color color = getColorAtPixel(image, j, i);
+                    bw.write(getCharFromRgb(color));
                 }
+                bw.write("\n");
             }
-
+            bw.flush();
         } catch (IOException e) {
             logger.fatal(e);
             e.printStackTrace();
             System.exit(1);
         }
+
     }
 
     public static void main(String[] args) {
